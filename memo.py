@@ -1,29 +1,20 @@
 #
-#  This performs memoization of a function that takes itself as an argument
-#  This allows the function to call itself recursively and still be memoized
+#  This performs memoization of a function
 #  This also breaks any long chains of recursion, by rerunning the function
 #  if it needs a subcall that has not been memoized yet.
 #
 # Example of a recursive function that computes the nth Fibonacci number
 #
-# def fib_inner (fib, n):
+# @memoize
+# def fib (n):
 #   if n < 2:
 #     return n
 #   return fib(n-1) + fib(n-2)
 #
-# fib = memoize(fib_inner)
 def memoize(f):
   class NotFound(Exception):
     pass
   cache = {}
-  # Function to be called recursively
-  # Uses exceptions to signal that the value is not in the cache
-  # and needs to be computed
-  def recursive(*x):
-    if x not in cache:
-      worklist.append(x)
-      raise NotFound()
-    return cache[x]
   # Worker function that processes the worklist to handle
   # the recursive calls
   worklist = []
@@ -32,7 +23,7 @@ def memoize(f):
     while True:
       try:
         if (x) not in cache:
-          cache[(x)] = f(recursive, *x)
+          cache[(x)] = f(*x)
       except NotFound:
         # Need to compute the value on the top of the worklist
         n = worklist.pop()
@@ -46,11 +37,23 @@ def memoize(f):
         break
       # Otherwise, pop the next value from the worklist
       x = worklist.pop()
+  running = False
   def helper(*x):
+    nonlocal running
+    if running:
+      # If function is called recursively
+      # Uses exceptions to signal that the value is not in the cache
+      # and needs to be computed
+      if x not in cache:
+        worklist.append(x)
+        raise NotFound()
+      return cache[x]
+    running = True
     # Add the value to the worklist
     worklist.append(x)
     # Process the worklist
     workloop()
     # Return the value from the cache
+    running = False
     return cache[x]
   return helper

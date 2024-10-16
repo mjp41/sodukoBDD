@@ -17,14 +17,14 @@ class Node:
   def __str__(self):
     return f"({self.variable} {self.lhs} {self.rhs})"
 
-def build_proposition_inner(_, var):
+@m.memoize
+def build_proposition(var):
   return Node(var, Leaf.true, Leaf.false)
-
-build_proposition = m.memoize(build_proposition_inner)
 
 a = build_proposition('a')
 
-def build_not_inner(build_not, lhs):
+@m.memoize
+def build_not(lhs):
   if isinstance(lhs, Leaf):
     if lhs == Leaf.true:
       return Leaf.false
@@ -33,11 +33,10 @@ def build_not_inner(build_not, lhs):
   # Is a Node
   return Node(lhs.variable, build_not(lhs.lhs), build_not(lhs.rhs))
 
-build_not = m.memoize(build_not_inner)
-
 na = build_not(a)
 
-def build_and_inner(build_and, lhs, rhs):
+@m.memoize
+def build_and(lhs, rhs):
   if (lhs == rhs):
     return lhs
   if (lhs == Leaf.false) or (rhs == Leaf.false):
@@ -65,9 +64,8 @@ def build_and_inner(build_and, lhs, rhs):
     return new_lhs
   return Node(var, new_lhs, new_rhs)
 
-build_and = m.memoize(build_and_inner)
-
-def build_or_inner(build_or, lhs, rhs):
+@m.memoize
+def build_or(lhs, rhs):
   if (lhs == rhs):
     return lhs
   if (lhs == Leaf.true) or (rhs == Leaf.true):
@@ -94,5 +92,3 @@ def build_or_inner(build_or, lhs, rhs):
   if new_lhs == new_rhs:
     return new_lhs
   return Node(var, new_lhs, new_rhs)
-
-build_or = m.memoize(build_or_inner)
