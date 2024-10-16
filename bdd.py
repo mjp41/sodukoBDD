@@ -6,8 +6,8 @@ class Leaf:
   def __str__(self):
     return f"{self.value}"
 
-Leaf.true = Leaf(True)
-Leaf.false = Leaf(False)
+true = Leaf(True)
+false = Leaf(False)
 
 class Node:
   def __init__(self, var, lhs, rhs):
@@ -18,45 +18,45 @@ class Node:
     return f"({self.variable} {self.lhs} {self.rhs})"
 
 @m.memoize
-def build_proposition(var):
-  return Node(var, Leaf.true, Leaf.false)
+def Prop(var):
+  return Node(var, true, false)
 
-a = build_proposition('a')
+a = Prop('a')
 
 @m.memoize
-def build_not(lhs):
+def Not(lhs):
   if isinstance(lhs, Leaf):
-    if lhs == Leaf.true:
-      return Leaf.false
+    if lhs == true:
+      return false
     else:
-      return Leaf.true
+      return true
   # Is a Node
-  return Node(lhs.variable, build_not(lhs.lhs), build_not(lhs.rhs))
+  return Node(lhs.variable, Not(lhs.lhs), Not(lhs.rhs))
 
-na = build_not(a)
+na = Not(a)
 
 @m.memoize
-def build_and(lhs, rhs):
+def And(lhs, rhs):
   if (lhs == rhs):
     return lhs
-  if (lhs == Leaf.false) or (rhs == Leaf.false):
-    return Leaf.false
-  if (lhs == Leaf.true):
+  if (lhs == false) or (rhs == false):
+    return false
+  if (lhs == true):
     return rhs
-  if (rhs == Leaf.true):
+  if (rhs == true):
     return lhs
   # Must both be nodes
   if lhs.variable == rhs.variable:
-    new_lhs = build_and(lhs.lhs, rhs.lhs)
-    new_rhs = build_and(lhs.rhs, rhs.rhs)
+    new_lhs = And(lhs.lhs, rhs.lhs)
+    new_rhs = And(lhs.rhs, rhs.rhs)
     var = lhs.variable
   elif lhs.variable < rhs.variable:
-    new_lhs = build_and(lhs.lhs, rhs)
-    new_rhs = build_and(lhs.rhs, rhs)
+    new_lhs = And(lhs.lhs, rhs)
+    new_rhs = And(lhs.rhs, rhs)
     var = lhs.variable
   else:
-    new_lhs = build_and(lhs, rhs.lhs)
-    new_rhs = build_and(lhs, rhs.rhs)
+    new_lhs = And(lhs, rhs.lhs)
+    new_rhs = And(lhs, rhs.rhs)
     var = rhs.variable
   ## Detect if new_lhs and new_rhs are the same
   ## Then this node is redundant
@@ -65,27 +65,27 @@ def build_and(lhs, rhs):
   return Node(var, new_lhs, new_rhs)
 
 @m.memoize
-def build_or(lhs, rhs):
+def Or(lhs, rhs):
   if (lhs == rhs):
     return lhs
-  if (lhs == Leaf.true) or (rhs == Leaf.true):
-    return Leaf.true
-  if (lhs == Leaf.false):
+  if (lhs == true) or (rhs == true):
+    return true
+  if (lhs == false):
     return rhs
-  if (rhs == Leaf.false):
+  if (rhs == false):
     return lhs
   # Must both be nodes
   if lhs.variable == rhs.variable:
-    new_lhs = build_or(lhs.lhs, rhs.lhs)
-    new_rhs = build_or(lhs.rhs, rhs.rhs)
+    new_lhs = Or(lhs.lhs, rhs.lhs)
+    new_rhs = Or(lhs.rhs, rhs.rhs)
     var = lhs.variable
   elif lhs.variable < rhs.variable:
-    new_lhs = build_or(lhs.lhs, rhs)
-    new_rhs = build_or(lhs.rhs, rhs)
+    new_lhs = Or(lhs.lhs, rhs)
+    new_rhs = Or(lhs.rhs, rhs)
     var = lhs.variable
   else:
-    new_lhs = build_or(lhs, rhs.lhs)
-    new_rhs = build_or(lhs, rhs.rhs)
+    new_lhs = Or(lhs, rhs.lhs)
+    new_rhs = Or(lhs, rhs.rhs)
     var = rhs.variable
   ## Detect if new_lhs and new_rhs are the same
   ## Then this node is redundant
