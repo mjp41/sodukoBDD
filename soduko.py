@@ -1,25 +1,19 @@
 import bdd as bdd
 
-def _all_false(*a):
-  result = bdd.true
-  for i, row in enumerate(a):
-    result = bdd.And(result, bdd.Not(bdd.Prop(row)))
+def _precisely_one(*a):
+  result = bdd.false
+  for i, prop in enumerate(a):
+    conjunct = prop
+    for j, prop2 in enumerate(a):
+      if i == j:
+        continue
+      conjunct = bdd.And(conjunct, bdd.Not(prop2))
+      continue
+    result = bdd.Or(result, conjunct)
   return result
 
-def _precisely_one(*a):
-  if len(a) == 0:
-    return bdd.false
-  if len(a) == 1:
-    return bdd.Prop(a[0])
-  lhs = bdd.And(bdd.Prop(a[0]), _all_false(*a[1:]))
-  rhs = bdd.And(bdd.Not(bdd.Prop(a[0])), _precisely_one(*a[1:]))
-  return bdd.Or(lhs, rhs)
-
 def _cell(i, j, n):
-  return f"r{i}c{j}v{n}"
-
-def _cell_constraint(i, j, size):
-  return _precisely_one(*[_cell(i, j, n) for n in range(1, size + 1)])
+  return bdd.Prop(f"r{i}c{j}v{n}")
 
 def _constraints(base, block_row, block_column):
   size = block_row * block_column
@@ -27,12 +21,12 @@ def _constraints(base, block_row, block_column):
   # Each cell has precisely one number
   for i in range(0, size):
     for j in range(0, size):
-      c = _cell_constraint(i, j, size)
+      c = _precisely_one(*[_cell(i, j, n) for n in range(1, size + 1)])
       basic = bdd.And(basic, c)
   
-  constraint = bdd.true
+  constraint = basic
   for n in range(1, size + 1):
-    constraint_n = basic
+    constraint_n = base
     print(f"{n}:", end="")
     # Each column has each number precisely once
     for i in range(0, size):
@@ -61,7 +55,7 @@ def solve(lines, block_row, block_column):
   for i, row in enumerate(lines):
     for j, c in enumerate(row):
       if c != " ":
-        base = bdd.And(base, bdd.Prop(_cell(i, j, int(c))))
+        base = bdd.And(base, _cell(i, j, int(c)))
   constraint = _constraints(base, block_row, block_column)
   print("=" * (size * 2 - 1))
   assignment = bdd.get_assignment(constraint)
